@@ -1,0 +1,46 @@
+name: Build IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Check project
+        run: |
+          pwd
+          ls -la
+          xcodebuild -list -project DucTueFinanceDemo.xcodeproj
+
+      - name: Build iOS app
+        run: |
+          xcodebuild \
+            -project DucTueFinanceDemo.xcodeproj \
+            -scheme DucTueFinanceDemo \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Create IPA
+        run: |
+          rm -rf Payload DucTueFinanceDemo.ipa
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/DucTueFinanceDemo.app Payload/
+          zip -r DucTueFinanceDemo.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: DucTueFinanceDemo-IPA
+          path: DucTueFinanceDemo.ipa
